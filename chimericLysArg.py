@@ -24,10 +24,9 @@ except KeyError:
     pass
 
 tot = msms.__len__()
-chi = msms.count((True, False)) + msms.count((False, True))
-one = msms.count((True, True))
+sig = msms.count((True, False)) + msms.count((False, True))
+chi = msms.count((True, True))
 non = msms.count((False, False))
 
-print tot, chi, one, non
 print chi * 100.0 / tot
-print one * 100.0 / tot
+print sig * 100.0 / tot
