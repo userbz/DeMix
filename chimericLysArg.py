@@ -6,7 +6,7 @@ import pymzml, sys
 
 speciter = pymzml.run.Reader(sys.argv[1])
 
-tol = 1e-5
+tol = 1e-5 # 10 ppm 
 l = 1.0 - tol
 r = 1.0 + tol
 
@@ -24,10 +24,9 @@ except KeyError:
     pass
 
 tot = msms.__len__()
-chi = msms.count((True, False)) + msms.count((False, True))
-one = msms.count((True, True))
+sig = msms.count((True, False)) + msms.count((False, True))
+chi = msms.count((True, True))
 non = msms.count((False, False))
 
-print tot, chi, one, non
 print chi * 100.0 / tot
-print one * 100.0 / tot
+print sig * 100.0 / tot
