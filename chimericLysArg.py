@@ -29,8 +29,4 @@ chi = msms.count((True, True))
 non = msms.count((False, False))
 
 print chi * 100.0 / tot
-<<<<<<< HEAD
 print sig * 100.0 / tot
-=======
-print sig * 100.0 / tot
->>>>>>> fff9374b95793375abdbd10067ef9f021c64bb37
