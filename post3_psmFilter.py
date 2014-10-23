@@ -154,7 +154,7 @@ if __name__ == '__main__':
             d += 1
             dSet.add(uniseq)
 
-    csvout = csv.writer(sys.stderr, delimiter=",")
+    csvout = csv.writer(sys.stderr, delimiter="\t")
     tl = len(tSet)
     dl = len(dSet)
     csvout.writerow([tl+dl, tl, dl, dl*1.0/(tl+dl), len(psm), psm.pop()[scoIx]])

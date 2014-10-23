@@ -15,8 +15,8 @@ from multiprocessing import Process
 
 import pandas
 import numpy
-# from sklearn.linear_model import LinearRegression, BayesianRidge
-from pyearth import Earth  # rev. 2013-12-03 MARS with py-earth
+from sklearn.linear_model import LinearRegression, BayesianRidge
+#from pyearth import Earth  # rev. 2013-12-03 MARS with py-earth
 
 import psmTheoretical
 
@@ -47,11 +47,11 @@ def regression(fn):
         theoretical_mz.append(mz)
     df['Theoretical m/z'] = theoretical_mz
     df['Precursor Mass Error (ppm)'] = (df['Precursor m/z'] - df['Theoretical m/z']) * 1e6 / df['Theoretical m/z']
-    X = numpy.array(zip(df['Precursor m/z'], df['Retention Time (minutes)'] * 60))
+    X = numpy.array(zip(df['Precursor m/z'], df['Retention Time (min)'] * 60)) # Convert RT from min to sec
     y = df['Precursor Mass Error (ppm)']
-    # clf = LinearRegression()
+    clf = LinearRegression()
     # clf = BayesianRidge()
-    clf = Earth()
+    #clf = Earth()
     clf.fit(X, y)
     return clf
 
