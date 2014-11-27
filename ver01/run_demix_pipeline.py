@@ -8,6 +8,9 @@ import tempfile
 import argparse
 import os
 
+import feature_ms2_clone
+
+
 apars = argparse.ArgumentParser()
 
 # Set ONE mzML file converted from RAW file, require both MS1 and MS2 in profile mode. 
@@ -62,27 +65,16 @@ print ' '.join(cmd)
 subprocess.call(cmd)
 
 
-# '======== convert mzid to tsv '
-cmd = ['java', '-Xmx8g',
-		'-cp', os.path.join(os.path.dirname(args.topp), 'MSGFPlus', 'MSGFPlus.jar'),
-		'edu.ucsd.msjava.ui.MzIDToTsv', 
-		'-i', centroidSpec + '.mzid' ]
-print ' '.join(cmd)
-subprocess.call(cmd)
-
-
 # '======== DeMix '
-import feature_ms2_clone
-psm = feature_ms2_clone.load_PSM(centroidSpec + '.tsv')
-t = psm['PrecursorError(ppm)'].std() * 3
+macc, max_scan = feature_ms2_clone.load_mzid(centroidSpec + '.mzid', qval=0.005)
+t = macc.std() * 3
 t = t > 10 and 10 or t
 
-print psm.describe()
 demixSpec = centroidSpec + '.demix.mgf'
 featureTab = os.path.join(args.out_dir,  'TOPPAS_out', '009-TextExporter',
                           os.path.basename(args.mzml).replace('.gz', '').replace('.mzML', '.csv'))
 demixSpec = feature_ms2_clone.spectra_clone(
-    featureTab, centroidSpec, psm, float(args.w))
+    featureTab, centroidSpec, macc.mean(), max_scan, float(args.w))
 
 
 # '======== second pass MS-GF+ dababase search '

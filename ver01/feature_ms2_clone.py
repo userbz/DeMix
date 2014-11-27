@@ -5,8 +5,10 @@ import pandas
 import numpy
 import pymzml
 import xml
+from pyteomics import mzid
 
-MS1_Precision = 8e-6
+
+MS1_Precision = 1e-5
 
 def load_feature_table(fn):
     table = []
@@ -19,17 +21,32 @@ def load_feature_table(fn):
     table.sort(key=lambda x: x[3])
     return table
 
-def load_PSM(fn):
-    psm = pandas.read_table(fn)
-    psm = psm[psm.QValue <=0.001]
-    return psm
+
+def load_mzid(fn, qval=0.001):
+    from pprint import pprint
+    psms = []
+    specids = [0]
+    psmReader = mzid.read(fn)
+    for psm in psmReader:
+        if psm.has_key('SpectrumIdentificationItem'):
+            try:
+                specids.append( int(psm['scan number(s)']))
+            except KeyError:
+                specids.append( int( psm['spectrumID'].split('=')[-1] ))
+            else:
+                pass
+
+            for match in psm['SpectrumIdentificationItem']:
+                if match['MS-GF:QValue'] < 0.001 and match['rank'] == 1 and match['IsotopeError'] == 0 and 2 <= match['chargeState'] <= 4:
+                    dm = match['experimentalMassToCharge'] - match['calculatedMassToCharge']
+                    dm = dm * 1e6 / match['calculatedMassToCharge']
+                    psms.append(dm)
+    return numpy.array(psms), max(specids)
 
 
-def spectra_clone(feature_fn, mzml_fn, first_psm, full_iso_width=4.0):
+def spectra_clone(feature_fn, mzml_fn, dm_offset, max_scan=0, full_iso_width=4.0):
     features = load_feature_table(feature_fn)
     iso_width = full_iso_width / 2.0
-    dm_offset = first_psm['PrecursorError(ppm)'].mean()
-    max_scan = first_psm.ScanNum.max()
     sys.stderr.write("Auto correct precursor m/z offset: %.2f ppm \n" % dm_offset)
     
     if mzml_fn.endswith('.gz'):
@@ -48,7 +65,7 @@ def spectra_clone(feature_fn, mzml_fn, first_psm, full_iso_width=4.0):
             title = element.get('id')
             idx = int(title.split('scan=')[-1])
 
-            if idx % 1000 == 0:
+            if idx % 1000 == 0 and max_scan > 0:
                 sys.stderr.write("DeMix %d MS/MS (~%.1f%%)\n" % (idx, idx * 100.0 / max_scan))
 
             if not timescale:
@@ -110,11 +127,8 @@ if __name__ == '__main__':
     mzml_fn = sys.argv[2]       # centroided MS/MS spectra in mzML, the same file which has been used in the first-pass database search.
     rawpsm_fn = sys.argv[3]     # first-pass database search result: Morpheus .PSMs.tsv file. 
     full_iso_width = float(sys.argv[4]) # the total width of precursor isolation window.
-
-    psm = load_PSM(rawpsm_fn)
-    # spectra_clone(feature_fn, mzml_fn, full_iso_width)
-
-    macc = psm['PrecursorError(ppm)']
-    sys.stderr.write("Mean Mass Error (ppm): %.3f SD: %.3f\n" % (macc.mean(), macc.std()))
+    macc, max_scan = load_mzid(rawpsm_fn)
+    # sys.stderr.write("Mean Mass Error (ppm): %.3f SD: %.3f\n" % (macc.mean(), macc.std()))
+    # spectra_clone(feature_fn, mzml_fn, macc.mean(), max_scan, full_iso_width)
 
 
