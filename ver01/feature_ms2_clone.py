@@ -37,7 +37,7 @@ def load_mzid(fn, qval=0.001):
                 pass
 
             for match in psm['SpectrumIdentificationItem']:
-                if match['MS-GF:QValue'] < 0.001 and match['rank'] == 1 and match['IsotopeError'] == 0 and 2 <= match['chargeState'] <= 4:
+                if match['MS-GF:QValue'] < qval and match['rank'] == 1 and match['IsotopeError'] == 0 and 2 <= match['chargeState'] <= 4:
                     dm = match['experimentalMassToCharge'] - match['calculatedMassToCharge']
                     dm = dm * 1e6 / match['calculatedMassToCharge']
                     psms.append(dm)
