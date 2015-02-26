@@ -1,5 +1,6 @@
 # bo.zhang@ki.se
 # A simplified version of DeMix data processing workflow.
+# Centroid Version
 
 import sys
 import urllib
@@ -13,7 +14,7 @@ import feature_ms2_clone
 
 apars = argparse.ArgumentParser()
 
-# Set ONE mzML file converted from RAW file, require both MS1 and MS2 in profile mode.
+# Set ONE mzML file converted from RAW file, require both MS1 and MS2 in Centroid mode.
 apars.add_argument('mzml')
 # Set path to the reference proteome FASTA file. (require writing permit of the same path)
 apars.add_argument('-db', default='HUMAN.fa')
@@ -26,7 +27,7 @@ apars.add_argument('-w', default=4.0)
 # When not found in system PATH, specify the absolute path of ExecutePipeline.exe.
 apars.add_argument('-exe', default='ExecutePipeline')
 # When using user customized TOPP workflow
-apars.add_argument('-topp', default=os.path.join(os.path.dirname(sys.argv[0]), 'TOPP_Processing.toppas'))
+apars.add_argument('-topp', default=os.path.join(os.path.dirname(sys.argv[0]), 'TOPP_Processing_Centroid.toppas'))
 # When loading a user coustomized TOPP resource file.
 apars.add_argument('-trf', default=tempfile.mktemp('.trf'))
 
@@ -49,18 +50,18 @@ cmd = [	args.exe,
 	 	'-resource_file', args.trf,
 		'-out_dir', args.out_dir ]
 print ' '.join(cmd)
-subprocess.call(cmd)
+# subprocess.call(cmd)
 
 # '======= first pass MS-GF+ database searching '
-centroidSpec = os.path.join(args.out_dir,  'TOPPAS_out', '004-PeakPickerHiRes', os.path.basename(args.mzml).replace('.gz', ''))
+centroidSpec = args.mzml
 cmd = [ 'java', '-Xmx8g',
 		'-jar', os.path.join(os.path.dirname(args.topp), 'MSGFPlus', 'MSGFPlus.jar'),
-		'-mod', os.path.join(os.path.dirname(args.topp), 'MSGFPlus', 'Tryp1mis_fixCaC_varOxM'),
+		'-mod', os.path.join(os.path.dirname(args.topp), 'MSGFPlus', 'Tryp1mis_fixCaC_varOxM.txt'),
 		'-d', args.db,
 		'-s', centroidSpec,
 		'-o', centroidSpec + '.mzid' ]
-# Q-Exactive, HCD, trypsin, 0/1 13C, 10 ppm precursor tol.
-cmd += '-t 10ppm -ti 0,1 -m 3 -inst 3 -minLength 7 -addFeatures 1 -tda 1'.split()
+# Q-Exactive, HCD, trypsin, 10 ppm precursor tol.
+cmd += '-t 10ppm -ti 0,0 -m 3 -inst 3 -minLength 7 -addFeatures 1 -tda 1'.split()
 print ' '.join(cmd)
 subprocess.call(cmd)
 
@@ -71,7 +72,7 @@ t = macc.std() * 3
 t = t > 10 and 10 or t
 
 demixSpec = centroidSpec + '.demix.mgf'
-featureTab = os.path.join(args.out_dir,  'TOPPAS_out', '009-TextExporter',
+featureTab = os.path.join(args.out_dir,  'TOPPAS_out', '006-TextExporter',
                           os.path.basename(args.mzml).replace('.gz', '').replace('.mzML', '.csv'))
 demixSpec = feature_ms2_clone.spectra_clone(
     featureTab, centroidSpec, macc.mean(), max_scan, float(args.w))
@@ -85,6 +86,7 @@ cmd = [ 'java', '-Xmx8g',
 		'-s', demixSpec,
 		'-o', demixSpec + '.mzid',
 		'-t', '%.1fppm' % t] # adaptive mass tolerance
+# Q-Exactive, HCD, trypsin 2 missed, 0/1 13C
 cmd += '-ti 0,1 -m 3 -inst 3 -minLength 7 -addFeatures 1 -tda 1'.split()
 print ' '.join(cmd)
 subprocess.call(cmd)

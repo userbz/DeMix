@@ -1,7 +1,6 @@
 import sys
 import os
 import csv
-import pandas
 import numpy
 import pymzml
 import xml
