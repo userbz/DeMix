@@ -55,7 +55,7 @@ subprocess.call(cmd)
 centroidSpec = os.path.join(args.out_dir,  'TOPPAS_out', '004-PeakPickerHiRes', os.path.basename(args.mzml).replace('.gz', ''))
 cmd = [ 'java', '-Xmx8g',
 		'-jar', os.path.join(os.path.dirname(args.topp), 'MSGFPlus', 'MSGFPlus.jar'),
-		'-mod', os.path.join(os.path.dirname(args.topp), 'MSGFPlus', 'Tryp1mis_fixCaC_varOxM'),
+		'-mod', os.path.join(os.path.dirname(args.topp), 'MSGFPlus', 'Tryp1mis_fixCaC_varOxM.txt'),
 		'-d', args.db,
 		'-s', centroidSpec,
 		'-o', centroidSpec + '.mzid' ]
