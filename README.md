@@ -23,11 +23,11 @@ MS-GF+ http://omics.pnl.gov/software/ms-gf
 
 
 ##### Example:
-* Windows Command Prompt   
-> python C:\GitHub\DeMix\run_demix_pipeline.py -exe "c:\Program Files\OpenMS-1.11\bin\ExecutePipeline.exe" -db c:\DATA\HUMAN.fa -w 4.0 C:\GitHub\DeMix\Example\20131106_Q2_SDC_120MIN_HELA1.mzML.gz
+* Windows Command Prompt
+python C:\GitHub\DeMix\run_demix_pipeline.py -exe "c:\Program Files\OpenMS-1.11\bin\ExecutePipeline.exe" -db c:\DATA\HUMAN.fa -w 4.0 C:\GitHub\DeMix\Example\20131106_Q2_SDC_120MIN_HELA1.mzML.gz
 
-* Linux or OSX Terminal    
-> python /home/GitHub/DeMix/run_demix_pipeline.py /home/GitHub/DeMix/Example/20131106_Q2_SDC_120MIN_HELA1.mzML.gz -db /Data/HUMAN.fa -w 4.0 -out_dir DeMixResult
+* Linux or OSX Terminal
+python /home/GitHub/DeMix/run_demix_pipeline.py /home/GitHub/DeMix/Example/20131106_Q2_SDC_120MIN_HELA1.mzML.gz -db /Data/HUMAN.fa -w 4.0 -out_dir DeMixResult
 
 Parameters:
 *   -db : Fasta file of proteome sequences (might require writing permit on the path for MS-GF+ indexing)  
