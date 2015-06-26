@@ -115,7 +115,7 @@ def spectra_clone(feature_fn, mzml_fn, dm_offset, max_scan=0, full_iso_width=4.0
                         for a, b in peaks:
                             print a, b
                         print 'END IONS\n'
-    except KeyError:
+    except (KeyError, ValueError):
         pass    
     return outpath
 
