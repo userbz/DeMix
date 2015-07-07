@@ -58,12 +58,13 @@ def spectra_clone(feature_fn, mzml_fn, dm_offset, max_scan=0, full_iso_width=4.0
 
     speciter = pymzml.run.Reader(mzml_fn)
     timescale = 0
+    features.sort(key=lambda x: x[0])
+    fmz_all = numpy.array([f[0] for f in features])
     try:
         for spec in speciter:
             element = spec.xmlTree.next()
             title = element.get('id')
             idx = int(title.split('scan=')[-1])
-
             if idx % 1000 == 0 and max_scan > 0:
                 sys.stderr.write("DeMix %d MS/MS (~%.1f%%)\n" % (idx, idx * 100.0 / max_scan))
 
@@ -90,9 +91,11 @@ def spectra_clone(feature_fn, mzml_fn, dm_offset, max_scan=0, full_iso_width=4.0
                     featured = False
                     peaks = sorted(filter(lambda x: x[1], spec.centroidedPeaks), key=lambda i: i[0])
 
-                    for f in features:
+                    l_idx = fmz_all.searchsorted(pmz - iso_width, side='left')
+                    r_idx = fmz_all.searchsorted(pmz + iso_width, side='right')
+                    for f in features[l_idx:r_idx]:
                         fmz, fz, frt_left, frt_right, frt = f
-                        if frt_left < rt < frt_right and abs(pmz - fmz) < iso_width:
+                        if frt_left < rt < frt_right:
                             if abs(pmz - fmz) / pmz <= MS1_Precision: 
                                 featured = True
                             print 'BEGIN IONS'
@@ -115,7 +118,7 @@ def spectra_clone(feature_fn, mzml_fn, dm_offset, max_scan=0, full_iso_width=4.0
                         for a, b in peaks:
                             print a, b
                         print 'END IONS\n'
-    except KeyError:
+    except (KeyError, ValueError):
         pass    
     return outpath
 
