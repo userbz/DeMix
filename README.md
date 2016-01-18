@@ -29,11 +29,7 @@ Java runtime environment
 4. Collect results in the TOPP output folders, including FeatureXML files, text exported feature lists, precursor deconvoluted (cloned) MGF spectra, and the database searching resualt (mzID) from MS-GF+.
 
 __Note__:
-* Current version works for centroid spectra. If you start with RAW files recorded in profile mode, please picking centroid peaks by using :
-  1. The time consuming but a bit more accurate approach:   
-  msconvert of ProteoWizard (zeroSample removeExtra 1- ) and PeakPickerHiRes of OpenMS (-algorithm:signal_to_noise 0)      
-  2. the fast approach:   
-  msconvert (peakPicking true 1-)
+* Current version works for centroid spectra. If you start with RAW files recorded in profile mode, please picking centroid peaks using the __peak_picking_raw.toppas__ pipeline, or msconvert with its inbuilt peak picking option.
 
 
 * Please also make sure that Java and Python runtime as well as all dependent packages are installed. Quick check by executing "python feature_ms2_clone_TOPP2.py" under command line.   
