@@ -1,44 +1,46 @@
 DeMix: maximizing peptide identification from cofragmentation
 =====
 
+
+I found it would be much easier for general users (normal people who don't work with command line) to go through the whole pipeline under the graphic interface of OpenMS. So I converted my python script into an external tool to integrate in the TOPPAS platform.
+
+
 ##### Dependent packages:  
 
-Python 2.7  
+__Python 2.7__  
+__OpenMS 2.0__   
 numpy  
 pandas  
 lxml  
 pymzml http://pymzml.github.io/  
 pyteomics http://pythonhosted.org//pyteomics/  
 msconvert (ProteoWizard) http://proteowizard.sourceforge.net/index.shtml  
+
+
 MS-GF+ http://omics.pnl.gov/software/ms-gf  
 Java runtime environment  
 
+
 ##### Procedures:
 
-1. msconvert, RAW to mzML.gz, with filter "zeroSample removeExtra 1-2"  ** Note:** do not use "peakPicking" option in msconvert.
-2. run_demix_pipeline to execute pipeline under command line (also execute MS-GF+ database searching)
+1. Copy the __DeMix.ttd__ config file to the OpenMS installation path. (e.g. C:\Program Files\OpenMS-2.0\share\OpenMS\TOOLS\EXTERNAL)   
+2. Open the __DeMixTOPP.toppas__ pipeline and change the parameters for the __two__ processes of MSGFAdaptor as well as the wrapper of DeMix, pointing the executable paths of __MSGFPlus.jar__ and the DeMix python script (__feature_ms2_clone_TOPP2.py__), and also the path to the proteome database in __FASTA__ format.  
+3. Load __mzML__ spectra files as the input in the pipeline, then execute the pipeline by pressing F5.  
+4. Collect results in the TOPP output folders, including FeatureXML files, text exported feature lists, precursor deconvoluted (cloned) MGF spectra, and the database searching resualt (mzID) from MS-GF+.
 
-* Note: the default setting of OpenMS parameters are optimized for Thermo Orbitrap Q-Exactive mass spectrometer (**high-resolution**: 70,000 MS1 and 17,500 MS2). Change parameters in OpenMS/TOPP if using data from different instrumental settings.
-* Note: the pipeline works with spectra in **profile** mode (both MS1 and MS2), and does peak picking. Modify the TOPP pipeline, if using spectra in centroid mode or mixed.
-* Note: change the modification file under the path of MSGFPlus if searching for different PTMs.  
-* Caution: many bug reports related to the database searching with MS-GF+. If program fails while calling the subprocess of MS-GF+, please check the Java setting in your system evrionment, and manually excute the command for MS-GF+ generated from the script.
+__Note__:
+* Current version works for centroid spectra. If you start with RAW files recorded in profile mode, please picking centroid peaks by using :
+  1. The time consuming but a bit more accurate approach:   
+  msconvert of ProteoWizard (zeroSample removeExtra 1- ) and PeakPickerHiRes of OpenMS (-algorithm:signal_to_noise 0)      
+  2. the fast approach:   
+  msconvert (peakPicking true 1-)
 
-##### Example:
-* Windows Command Prompt   
-> python C:\GitHub\DeMix\run_demix_pipeline.py -exe "c:\Program Files\OpenMS-1.11\bin\ExecutePipeline.exe" -db c:\DATA\HUMAN.fa -w 4.0 C:\GitHub\DeMix\Example\20131106_Q2_SDC_120MIN_HELA1.mzML.gz
 
-* Linux or OSX Terminal    
-> python /home/GitHub/DeMix/run_demix_pipeline.py /home/GitHub/DeMix/Example/20131106_Q2_SDC_120MIN_HELA1.mzML.gz -db /Data/HUMAN.fa -w 4.0 -out_dir DeMixResult
+* Please also make sure that Java and Python runtime as well as all dependent packages are installed. Quick check by executing "python feature_ms2_clone_TOPP2.py" under command line.   
+* The default parameters are optimized for Thermo Orbitrap Q-Exactive mass spectrometer (__high-resolution__: 70,000 MS1 and 17,500 MS2). Change parameters in TOPP if using data from different instrumental settings.   
+* Change the modification file under the path of MSGFPlus if searching for different __PTMs__.  
+ * Caution: many bug reports related to the database searching with MS-GF+. If program fails while calling the subprocess of MS-GF+, please check the Java setting in your system environment, and manually execute the command for MS-GF+ generated from the script.
 
-Parameters:
-*   -db : Fasta file of proteome sequences (might require writing permit on the path for MS-GF+ indexing)  
-*   -w : full width of precursor isolation window, default 4.0   
-*   -out_dir : root path for outputs, default: current working path "."   ** Note**: spectra and identification result will be put in: out_dir/TOPPAS_out/004-PeakPickerHiRes/  
-
-* Set these options only for debug purpose:   
--exe : when "ExecutePipeline" is not found in system environment PATH.  
--topp : when the default TOPPAS workflow is not working.  
--trf : when failed generating temporary resource file.  
 
 ##### Reference
 Zhang, B., Pirmoradian, M., Chernobrovkin, A., & Zubarev, R. A. (2014). DeMix Workflow for Efficient Identification of Co-fragmented Peptides in High Resolution Data-dependent Tandem Mass Spectrometry. Molecular & Cellular Proteomics : MCP. doi:10.1074/mcp.O114.038877
