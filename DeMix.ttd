@@ -12,7 +12,7 @@
 		  <e_category>Utility</e_category>
 
 		  // command line options of your external tool (use placeholders ,e.g. %1 to insert dynamic content)
-		  <cloptions>%1 -feature "%2" -psm "%3" -out_dir "%4" -w "%5" %6</cloptions>
+		  <cloptions>%1 -feature "%2" -psm "%3" -out_dir "%4" -w "%5" "%6"</cloptions>
 
 		  // the actual executable (usually it should be in your PATH, to avoid having to specify a full path to it)
 		  <path>python</path>
