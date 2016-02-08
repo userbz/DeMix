@@ -83,8 +83,10 @@ def spectra_clone(feature_fn, mzml_fn, dm_offset, max_scan=0, full_iso_width=4.0
             if spec['ms level'] == 2.0:
                 try:
                     rt = float(spec['scan time']) * timescale
-                except:
-                    continue
+                except KeyError:
+                    rt = float(spec['scan start time']) * timescale
+                else:
+                   	raise
 
                 pmz = None
                 if iso_left == 0:
