@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 import os
 import csv
@@ -26,7 +27,7 @@ def load_mzid(fn, qval=0.01):
     specids = [0]
     psmReader = mzid.read(fn)
     for psm in psmReader:
-        if psm.has_key('SpectrumIdentificationItem'):
+        if 'SpectrumIdentificationItem' in psm:
             try:
                 specids.append( int(psm['scan number(s)']))
             except KeyError:
@@ -58,7 +59,7 @@ def spectra_clone(feature_fn, mzml_fn, dm_offset, max_scan=0, full_iso_width=4.0
         out_dir = os.path.dirname(mzml_fn)
 
     outpath = os.path.join(out_dir, os.path.basename(mzml_fn) + ".demix.mgf" )
-    sys.stdout = open(outpath, 'wb')
+    fh = open(outpath, 'w')
 
     speciter = pymzml.run.Reader(mzml_fn)
     timescale = 0
@@ -67,26 +68,33 @@ def spectra_clone(feature_fn, mzml_fn, dm_offset, max_scan=0, full_iso_width=4.0
     fmz_all = numpy.array([f[0] for f in features])
     try:
         for spec in speciter:
-            element = spec.xmlTree.next()
+            try:
+                element = spec.xmlTree.next()
+            except:
+                element = next(spec.xmlTree) # Python 3
+
             title = element.get('id')
             idx = int(title.split('scan=')[-1])
             if idx % 1000 == 0 and max_scan > 0:
                 sys.stderr.write("DeMix %d MS/MS (~%.1f%%)\n" % (idx, idx * 100.0 / max_scan))
 
-            if not timescale:
+            if timescale == 0:
                 xmltext = xml.etree.ElementTree.tostring(element)
-                if xmltext.count(r'unitName="second"'):
+                if 'unitName="second"' in str(xmltext):
                     timescale = 1
                 else:
                     timescale = 60
 
             if spec['ms level'] == 2.0:
-                try:
+                rt = 0
+                if 'scan time' in spec:
                     rt = float(spec['scan time']) * timescale
-                except KeyError:
+                elif 'scan start time' in spec:
                     rt = float(spec['scan start time']) * timescale
                 else:
-                   	raise
+                    print("Having problem reading RT", spec)
+                    continue
+
 
                 pmz = None
                 if iso_left == 0:
@@ -120,26 +128,26 @@ def spectra_clone(feature_fn, mzml_fn, dm_offset, max_scan=0, full_iso_width=4.0
                         if frt_left < rt < frt_right:
                             if abs(pmz - fmz) / pmz <= MS1_Precision: 
                                 featured = True
-                            print 'BEGIN IONS'
-                            print 'TITLE=%d[%d:%f:%f]' % (idx, features.index(f), fmz, frt)
-                            print 'RTINSECONDS=%f' % rt
-                            print 'PEPMASS=%f' % (fmz - fmz * dm_offset * 1e-6)
-                            print 'CHARGE=%d+' % fz
-                            print 'RAWFILE=%s [%f:%d] diff:%f' % (title, pmz, pz, (fmz - pmz))
+                            print('BEGIN IONS', file=fh)
+                            print('TITLE=%d[%d:%f:%f]' % (idx, features.index(f), fmz, frt), file=fh)                            
+                            print('RTINSECONDS=%f' % rt , file=fh)
+                            print('PEPMASS=%f' % (fmz - fmz * dm_offset * 1e-6), file=fh)
+                            print('CHARGE=%d+' % fz, file=fh)
+                            print('RAWFILE=%s [%f:%d] diff:%f' % (title, pmz, pz, (fmz - pmz)), file=fh)
                             for a, b in peaks:
-                                print a, b
-                            print 'END IONS\n'
+                                print(a, b, file=fh)
+                            print('END IONS\n', file=fh)
 
                     if featured == False and pz > 1:
-                        print 'BEGIN IONS'
-                        print 'TITLE=%d[-:%f:%f]' % (idx, pmz, rt)
-                        print 'RTINSECONDS=%f' % rt
-                        print 'PEPMASS=%f' % (pmz - pmz * dm_offset * 1e-6)
-                        print 'CHARGE=%d+' % pz
-                        print 'RAWFILE=%s' % (title)
+                        print('BEGIN IONS', file=fh)
+                        print('TITLE=%d[-:%f:%f]' % (idx, pmz, rt), file=fh)
+                        print('RTINSECONDS=%f' % rt, file=fh)
+                        print('PEPMASS=%f' % (pmz - pmz * dm_offset * 1e-6), file=fh)
+                        print('CHARGE=%d+' % pz, file=fh)
+                        print('RAWFILE=%s' % (title), file=fh)
                         for a, b in peaks:
-                            print a, b
-                        print 'END IONS\n'
+                            print(a, b, file=fh)
+                        print('END IONS\n', file=fh)
     except (KeyError, ValueError):
         pass    
     return outpath
