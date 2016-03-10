@@ -22,7 +22,6 @@ def load_feature_table(fn):
 
 
 def load_mzid(fn, qval=0.01):
-    from pprint import pprint
     psms = []
     specids = [0]
     psmReader = mzid.read(fn)
@@ -48,35 +47,26 @@ def spectra_clone(feature_fn, mzml_fn, dm_offset, max_scan=0, full_iso_width=4.0
     iso_width = full_iso_width / 2.0
     sys.stderr.write("Auto correct precursor m/z offset: %.2f ppm \n" % dm_offset)
     ns = {'ns0':"http://psi.hupo.org/ms/mzml"}
-    
-    if mzml_fn.endswith('.gz'):
-        fh = gzip.open(mzml_fn)
-    else:
-        fh = open(mzml_fn)
-    
 
     if out_dir == None:
         out_dir = os.path.dirname(mzml_fn)
 
     outpath = os.path.join(out_dir, os.path.basename(mzml_fn) + ".demix.mgf" )
-    fh = open(outpath, 'w')
 
     speciter = pymzml.run.Reader(mzml_fn)
     timescale = 0
     iso_left, iso_right = (0, 0)
     features.sort(key=lambda x: x[0])
     fmz_all = numpy.array([f[0] for f in features])
+    fh = open(outpath, 'w')
+
     try:
         for spec in speciter:
-            try:
-                element = spec.xmlTree.next()
-            except:
-                element = next(spec.xmlTree) # Python 3
-
+            element = next(spec.xmlTree) # Python 3
             title = element.get('id')
             idx = int(title.split('scan=')[-1])
             if idx % 1000 == 0 and max_scan > 0:
-                sys.stderr.write("DeMix %d MS/MS (~%.1f%%)\n" % (idx, idx * 100.0 / max_scan))
+                print("DeMix %d MS/MS (~%.1f%%)\n" % (idx, idx * 100.0 / max_scan))
 
             if timescale == 0:
                 xmltext = xml.etree.ElementTree.tostring(element)
@@ -92,7 +82,7 @@ def spectra_clone(feature_fn, mzml_fn, dm_offset, max_scan=0, full_iso_width=4.0
                 elif 'scan start time' in spec:
                     rt = float(spec['scan start time']) * timescale
                 else:
-                    print("Having problem reading RT", spec)
+                    print("Having problem reading RT")
                     continue
 
 
@@ -100,13 +90,13 @@ def spectra_clone(feature_fn, mzml_fn, dm_offset, max_scan=0, full_iso_width=4.0
                 if iso_left == 0:
                     iso_left = iso_width
                     iso_right = iso_width
-
                     try:
                         # automatically adjust isolation window width
-                        c = filter(lambda c: 'precursor' in c.tag, element.getchildren())[0]
-                        c = filter(lambda c: 'precursor' in c.tag, c.getchildren())[0]
-                        c = filter(lambda c: 'isolation' in c.tag, c.getchildren())[0]
+                        c = [c for c in element.getchildren() if 'precursor' in c.tag][0]
+                        c = [c for c in c.getchildren() if 'precursor' in c.tag][0]
+                        c = [c for c in c.getchildren() if 'isolation' in c.tag][0]
                         pmz, iso_left, iso_right = [float(c.get('value')) for c in c.findall('ns0:cvParam', ns)]
+                        print ("adjusted isolation window: -%.1f, +%.1f" % (iso_left, iso_right))
                     except:
                         pass
 
